@@ -60,6 +60,40 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* [MỚI] Tùy chỉnh con trỏ chuột (Custom Pink Gaming Cursor) */
+        html, body {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath fill='%23f43f5e' stroke='%23ffffff' stroke-width='1.5' d='M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L6.35 2.86a.5.5 0 0 0-.85.35Z'/%3E%3C/svg%3E") 4 2, auto;
+        }
+        a, button, label, [role="button"], .cursor-pointer {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath fill='%23fb7185' stroke='%23ffffff' stroke-width='1.5' d='M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z'/%3E%3C/svg%3E") 14 14, pointer;
+        }
+
+        /* [MỚI] Vòng hào quang di chuyển theo con trỏ chuột */
+        #cursor-ring {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 34px;
+            height: 34px;
+            border: 2px solid rgba(251, 113, 133, 0.75);
+            background: rgba(244, 63, 94, 0.12);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.45);
+        }
+        #cursor-ring.hovered {
+            width: 48px;
+            height: 48px;
+            border-color: #c084fc;
+            background: rgba(192, 132, 252, 0.18);
+        }
+        @media (pointer: coarse) {
+            #cursor-ring { display: none; }
+        }
+
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
             background-color: #0d1117;
@@ -105,6 +139,9 @@
     </style>
 </head>
 <body class="relative">
+
+    <!-- [MỚI] Vòng tròn hào quang đi theo con trỏ chuột -->
+    <div id="cursor-ring"></div>
 
     <!-- Canvas cho hiệu ứng bong bóng & ngôi sao lấp lánh -->
     <canvas id="particles-js"></canvas>
@@ -166,13 +203,23 @@
                         <!-- Animated Neon Aura -->
                         <div class="absolute -inset-1 bg-gradient-to-r from-pinky-500 via-purple-500 to-rose-500 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse-glow"></div>
                         
-                        <!-- Main Avatar Container -->
-                        <div class="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full p-2 bg-gradient-to-b from-pinky-400 to-purple-600 shadow-2xl overflow-hidden animate-float">
-                            <img src="https://placehold.co/400x400/fb7185/ffffff?text=Kim+Hòa" 
+                        <!-- Main Avatar Container (Bấm vào để tải ảnh đại diện lên) -->
+                        <label for="avatar-upload" title="Bấm để chọn ảnh đại diện của bạn" class="cursor-pointer block relative w-64 h-64 sm:w-72 sm:h-72 rounded-full p-2 bg-gradient-to-b from-pinky-400 to-purple-600 shadow-2xl overflow-hidden animate-float">
+                            <!-- Thay link ảnh cố định ở thuộc tính src bên dưới nếu muốn lưu cứng -->
+                            <img id="avatar-img"
+                                 src="https://placehold.co/400x400/fb7185/ffffff?text=Kim+Hòa" 
                                  alt="Huỳnh Ngọc Kim Hòa" 
                                  onerror="this.src='https://ui-avatars.com/api/?name=Kim+Hoa&background=f43f5e&color=fff&size=400'"
                                  class="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-105">
-                        </div>
+                            
+                            <!-- Lớp phủ hướng dẫn đổi ảnh khi di chuột vào -->
+                            <div class="absolute inset-2 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-white backdrop-blur-[2px]">
+                                <i class="fa-solid fa-camera text-2xl text-pinky-400 mb-1"></i>
+                                <span class="text-xs font-bold tracking-wide">Đổi ảnh Avatar</span>
+                            </div>
+                        </label>
+                        <!-- Input ẩn để chọn ảnh từ máy -->
+                        <input type="file" id="avatar-upload" accept="image/*" class="hidden">
 
                         <!-- Floating Badges -->
                         <div class="absolute -bottom-2 -left-2 bg-gray-900/90 border border-pinky-500 px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2 backdrop-blur-md">
@@ -502,7 +549,58 @@
             });
         });
 
-        // 2. Interactive Canvas Particles (Stars & Pink Bubbles)
+        // 2. [MỚI] Chèn & Lưu Ảnh Avatar trực tiếp trên trình duyệt
+        const avatarUpload = document.getElementById('avatar-upload');
+        const avatarImg = document.getElementById('avatar-img');
+
+        // Khôi phục ảnh đã chọn trước đó nếu có
+        const savedAvatar = localStorage.getItem('kimhoa_avatar');
+        if (savedAvatar) {
+            avatarImg.src = savedAvatar;
+        }
+
+        avatarUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const imageData = event.target.result;
+                avatarImg.src = imageData;
+                try {
+                    localStorage.setItem('kimhoa_avatar', imageData);
+                } catch (err) {
+                    console.warn('Ảnh dung lượng lớn nên chỉ hiển thị tạm thời:', err);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 3. [MỚI] Hiệu ứng vòng hào quang chạy theo con trỏ chuột
+        const cursorRing = document.getElementById('cursor-ring');
+        let mouseX = -100, mouseY = -100;
+        let ringX = -100, ringY = -100;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        // Phóng to vòng sáng khi hover vào thẻ tương tác
+        document.querySelectorAll('a, button, label').forEach(el => {
+            el.addEventListener('mouseenter', () => cursorRing.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursorRing.classList.remove('hovered'));
+        });
+
+        function animateCursorRing() {
+            ringX += (mouseX - ringX) * 0.2;
+            ringY += (mouseY - ringY) * 0.2;
+            cursorRing.style.left = ringX + 'px';
+            cursorRing.style.top = ringY + 'px';
+            requestAnimationFrame(animateCursorRing);
+        }
+        animateCursorRing();
+
+        // 4. Interactive Canvas Particles (Stars & Pink Bubbles)
         const canvas = document.getElementById('particles-js');
         const ctx = canvas.getContext('2d');
 

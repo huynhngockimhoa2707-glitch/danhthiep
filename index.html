@@ -60,7 +60,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* [MỚI] Tùy chỉnh con trỏ chuột (Custom Pink Gaming Cursor) */
+        /* Tùy chỉnh con trỏ chuột (Custom Pink Gaming Cursor) */
         html, body {
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath fill='%23f43f5e' stroke='%23ffffff' stroke-width='1.5' d='M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L6.35 2.86a.5.5 0 0 0-.85.35Z'/%3E%3C/svg%3E") 4 2, auto;
         }
@@ -68,7 +68,7 @@
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath fill='%23fb7185' stroke='%23ffffff' stroke-width='1.5' d='M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z'/%3E%3C/svg%3E") 14 14, pointer;
         }
 
-        /* [MỚI] Vòng hào quang di chuyển theo con trỏ chuột */
+        /* Vòng hào quang di chuyển theo con trỏ chuột */
         #cursor-ring {
             position: fixed;
             top: 0;
@@ -140,7 +140,7 @@
 </head>
 <body class="relative">
 
-    <!-- [MỚI] Vòng tròn hào quang đi theo con trỏ chuột -->
+    <!-- Vòng tròn hào quang đi theo con trỏ chuột -->
     <div id="cursor-ring"></div>
 
     <!-- Canvas cho hiệu ứng bong bóng & ngôi sao lấp lánh -->
@@ -398,17 +398,23 @@
                                 <span class="text-xs font-black text-yellow-400">SS RANK</span>
                             </div>
 
-                            <!-- Hero Avatar Image Placeholder -->
-                            <div class="relative w-full h-56 rounded-xl overflow-hidden mb-4 bg-gray-800 flex items-center justify-center">
-                                <img src="https://placehold.co/300x400/3b0764/fb7185?text=Capheny+Top+1" 
+                            <!-- [MỚI] Hero Avatar Image Container (Bấm để thêm/đổi ảnh Capheny) -->
+                            <label for="capheny-upload" title="Bấm để chọn ảnh Capheny" class="cursor-pointer block relative w-full h-56 rounded-xl overflow-hidden mb-4 bg-gray-800 flex items-center justify-center group/cap">
+                                <img id="capheny-img"
+                                     src="https://placehold.co/300x400/3b0764/fb7185?text=Capheny+Top+1" 
                                      alt="Capheny Main" 
                                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                 <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
-                                <div class="absolute bottom-2 left-2 right-2 text-center">
+                                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover/cap:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-white backdrop-blur-[2px]">
+                                    <i class="fa-solid fa-camera text-xl text-pinky-400 mb-1"></i>
+                                    <span class="text-xs font-bold">Đổi ảnh Capheny</span>
+                                </div>
+                                <div class="absolute bottom-2 left-2 right-2 text-center pointer-events-none">
                                     <span class="text-sm font-extrabold text-white tracking-wide drop-shadow-md">CAPHENY</span>
                                     <span class="block text-[10px] text-pinky-300">Đại Liên Năng Lượng</span>
                                 </div>
-                            </div>
+                            </label>
+                            <input type="file" id="capheny-upload" accept="image/*" class="hidden">
 
                             <!-- Card Footer -->
                             <div class="space-y-1.5 text-xs text-center">
@@ -549,11 +555,10 @@
             });
         });
 
-        // 2. [MỚI] Chèn & Lưu Ảnh Avatar trực tiếp trên trình duyệt
+        // 2. Chèn & Lưu Ảnh Avatar trực tiếp trên trình duyệt
         const avatarUpload = document.getElementById('avatar-upload');
         const avatarImg = document.getElementById('avatar-img');
 
-        // Khôi phục ảnh đã chọn trước đó nếu có
         const savedAvatar = localStorage.getItem('kimhoa_avatar');
         if (savedAvatar) {
             avatarImg.src = savedAvatar;
@@ -575,7 +580,32 @@
             reader.readAsDataURL(file);
         });
 
-        // 3. [MỚI] Hiệu ứng vòng hào quang chạy theo con trỏ chuột
+        // [MỚI] 2b. Chèn & Lưu Ảnh Capheny trực tiếp trên trình duyệt
+        const caphenyUpload = document.getElementById('capheny-upload');
+        const caphenyImg = document.getElementById('capheny-img');
+
+        const savedCapheny = localStorage.getItem('kimhoa_capheny_avatar');
+        if (savedCapheny) {
+            caphenyImg.src = savedCapheny;
+        }
+
+        caphenyUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const imageData = event.target.result;
+                caphenyImg.src = imageData;
+                try {
+                    localStorage.setItem('kimhoa_capheny_avatar', imageData);
+                } catch (err) {
+                    console.warn('Ảnh dung lượng lớn nên chỉ hiển thị tạm thời:', err);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 3. Hiệu ứng vòng hào quang chạy theo con trỏ chuột
         const cursorRing = document.getElementById('cursor-ring');
         let mouseX = -100, mouseY = -100;
         let ringX = -100, ringY = -100;
